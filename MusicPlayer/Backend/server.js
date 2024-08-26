@@ -12,9 +12,9 @@ app.use(cors())
 app.get('/', (req, res) => {
     res.send('Hello World')
 })
-app.use('/auth', require('./Routes/authRoutes'));
-app.use('/songs', require('./Routes/songsRoutes'));
-app.use('/playlist', require('./Routes/playlistRoutes'));
+app.use('/api/v1/auth', require('./Routes/authRoutes'));
+app.use('/api/v1/songs', require('./Routes/songsRoutes'));
+app.use('/api/v1/playlist', require('./Routes/playlistRoutes'));
 
 
 const port = process.env.PORT || 5000
