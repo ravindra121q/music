@@ -17,8 +17,11 @@ app.use('/songs', require('./Routes/songsRoutes'));
 app.use('/playlist', require('./Routes/playlistRoutes'));
 
 
-const port = process.env.PORT || 5000;
-
-app.listen(port, () => {
-    connectDB();
-})
+connectDB().then(() => {
+    app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+    });
+}).catch((err) => {
+    console.error("Failed to connect to DB", err);
+    process.exit(1); 
+});
