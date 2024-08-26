@@ -52,7 +52,7 @@ exports.signin = async (req, res) => {
 exports.getSongs = async (req, res) => {
     try {
         const songs = await songModal.find();
-        if (songs?.length === 0) {
+        if (!songs) {
             return res.status(404).json({ message: 'No songs found' });
         }
         return res.status(200).json({ data: songs });
@@ -125,7 +125,7 @@ exports.getPlaylists = async (req, res) => {
             return res.status(401).json({ message: 'Invalid token' });
         }
 
-        const playlists = await playlistModel.find({ user: decoded.userId });
+        const playlists = await playlistModel.find({ user: decoded.userId }).populate('songs');
         if (!playlists || playlists.length === 0) {
             return res.status(404).json({ message: 'No playlists found for this user' });
         }
@@ -140,6 +140,7 @@ exports.getPlaylists = async (req, res) => {
 
 exports.createPlaylist = async (req, res) => {
     const { name } = req.body;
+
     try {
         const token = req.headers.authorization?.split(' ')[1];
         if (!token) {
@@ -163,7 +164,49 @@ exports.createPlaylist = async (req, res) => {
     }
 }
 
+exports.createPlaylistwithsongs = async (req, res) => {
+    const { name, songIds } = req.body;
+    try {
+        const newPlaylist = new playlistModel({
+            name,
+            songs: songIds
+        });
+        await newPlaylist.save();
+        return res.status(201).json({ message: 'Playlist created successfully' });
+    } catch (error) {
+        console.error('Error creating playlist:', error);
+        return res.status(500).json({ message: 'Something went wrong while creating playlist' });
+    }
+}
 
+exports.updatedPlaylistwithsongs = async (req, res) => {
+    const { id } = req.params;
+    
+    const { name, songs } = req.body;
+    try {
+        await playlistModel.findByIdAndUpdate(id, {
+            name,
+            songs
+        })
+        return res.status(200).json({ message: 'Playlist updated successfully', data: { id, name, songs } });
+    } catch (error) {
+        console.error('Error updating playlist:', error);
+        return res.status(500).json({ message: 'Something went wrong' })
+    }
+}
+
+exports.getSongsByPlaylistId = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const playlist = await playlistModel.findById({ _id: id }).populate('songs');
+        if (!playlist) {
+            return res.status(404).json({ message: 'Playlist not found' });
+        }
+        return res.status(200).json({ data: playlist.songs });
+    } catch (error) {
+        return res.status(500).json({ message: 'Something went wrong' })
+    }
+}
 exports.deletePlaylist = async (req, res) => {
     const { id } = req.params;
     try {
